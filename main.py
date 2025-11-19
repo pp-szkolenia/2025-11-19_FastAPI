@@ -44,6 +44,9 @@ def get_tasks():
 @app.get("/tasks/{task_id}")
 def get_task_by_id(task_id: int):
     target_task = get_item_by_id(tasks_data, task_id)
+    if not target_task:
+        message = {"error": f"Task with id {task_id} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
     return {"result": target_task}
 
 
