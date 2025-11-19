@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 
-from app.models import TaskBody
+from app.models import (TaskBody, TaskResponse, GetAllTasksResponse,
+                        GetSingleTaskResponse, PostTaskResponse, PutTaskResponse)
 from app.utils import get_item_by_id, get_item_index_by_id
 
 
@@ -13,28 +14,47 @@ tasks_data = [
 router = APIRouter()
 
 
-@router.get("/tasks")
+@router.get("/tasks", response_model=GetAllTasksResponse)
 def get_tasks():
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": tasks_data})
+    response_tasks_data = [
+        TaskResponse(task_id=task["id"], description=task["description"],
+                     priority=task["priority"], is_completed=task["is_completed"])
+        for task in tasks_data
+    ]
+
+    return {"result": response_tasks_data}
 
 
-@router.get("/tasks/{task_id}")
+@router.get("/tasks/{task_id}", response_model=GetSingleTaskResponse)
 def get_task_by_id(task_id: int):
     target_task = get_item_by_id(tasks_data, task_id)
     if not target_task:
         message = {"error": f"Task with id {task_id} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    return JSONResponse(content={"result": target_task}, status_code=status.HTTP_200_OK)
+
+    response_target_task = TaskResponse(
+        task_id=target_task["id"], description=target_task["description"],
+        priority=target_task["priority"], is_completed=target_task["is_completed"]
+    )
+
+    return {"result": response_target_task}
 
 
-@router.post("/tasks", status_code=status.HTTP_201_CREATED)
+@router.post("/tasks", status_code=status.HTTP_201_CREATED,
+             response_model=PostTaskResponse)
 def create_task(body: TaskBody):
     new_task = body.model_dump()
     new_task_id = max(task["id"] for task in tasks_data) + 1
     new_task["id"] = new_task_id
     tasks_data.append(new_task)
 
-    return {"message": "New task added", "details": new_task}
+    response_new_task = TaskResponse(
+        task_id=new_task["id"], description=new_task["description"],
+        priority=new_task["priority"], is_completed=new_task["is_completed"]
+    )
+
+    return {"message": "New task added", "details": response_new_task}
+
 
 @router.delete("/tasks/{task_id}")
 def delete_task_by_id(task_id: int):
@@ -46,7 +66,7 @@ def delete_task_by_id(task_id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/tasks/{task_id}")
+@router.put("/tasks/{task_id}", response_model=PutTaskResponse)
 def update_task_by_id(task_id: int, body: TaskBody):
     target_index = get_item_index_by_id(tasks_data, task_id)
 
@@ -58,6 +78,10 @@ def update_task_by_id(task_id: int, body: TaskBody):
     updated_task["id"] = task_id
     tasks_data[target_index] = updated_task
 
-    message = {"message": f"Task with id {task_id} updated", "new_value": updated_task}
-    return JSONResponse(status_code=status.HTTP_200_OK, content=message)
+    response_updated_task = TaskResponse(
+        task_id=updated_task["id"], description=updated_task["description"],
+        priority=updated_task["priority"], is_completed=updated_task["is_completed"]
+    )
 
+    return {"message": f"Task with id {task_id} updated",
+            "new_value": response_updated_task}
