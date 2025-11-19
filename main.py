@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 
@@ -65,6 +65,10 @@ def get_users():
 @app.get("/users/{user_id}")
 def get_user_by_id(user_id: int):
     target_user = get_item_by_id(users_data, user_id)
+    if not target_user:
+        message = {"error": f"User with id {user_id} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
     return {"result": target_user}
 
 
