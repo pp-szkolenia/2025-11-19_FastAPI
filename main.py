@@ -49,7 +49,7 @@ def get_task_by_id(task_id: int):
     if not target_task:
         message = {"error": f"Task with id {task_id} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    return {"result": target_task}
+    return JSONResponse(content={"result": target_task}, status_code=status.HTTP_200_OK)
 
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED)
@@ -64,7 +64,7 @@ def create_task(body: TaskBody):
 
 @app.get("/users")
 def get_users():
-    return {"result": users_data}
+    return JSONResponse(content={"result": users_data}, status_code=status.HTTP_200_OK)
 
 
 @app.get("/users/{user_id}")
@@ -74,10 +74,10 @@ def get_user_by_id(user_id: int):
         message = {"error": f"User with id {user_id} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
-    return {"result": target_user}
+    JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
 
 
-@app.post("/users")
+@app.post("/users", status_code=status.HTTP_201_CREATED)
 def create_user(body: UserBody):
     new_user = body.model_dump()
     new_user_id = max(user["id"] for user in users_data) + 1
