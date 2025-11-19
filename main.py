@@ -5,10 +5,14 @@ from pydantic import BaseModel
 app = FastAPI()
 
 
+def get_item_by_id(items_list, item_id):
+    return next((item for item in items_list if item["id"] == item_id), None)
+
+
 class TaskBody(BaseModel):
     description: str
-    priority: int
-    is_completed: bool
+    priority: int | None = None
+    is_completed: bool = False
 
 
 class UserBody(BaseModel):
@@ -53,6 +57,12 @@ def get_users():
     return {"result": users_data}
 
 
+@app.get("/users/{user_id}")
+def get_user_by_id(user_id: int):
+    target_user = get_item_by_id(users_data, user_id)
+    return {"result": target_user}
+
+
 @app.post("/users")
 def create_user(body: UserBody):
     new_user = body.model_dump()
@@ -61,3 +71,4 @@ def create_user(body: UserBody):
     users_data.append(new_user)
 
     return {"message": "New user added", "details": new_user}
+
