@@ -64,6 +64,15 @@ def create_task(body: TaskBody):
 
     return {"message": "New task added", "details": new_task}
 
+@app.delete("/tasks/{task_id}")
+def delete_task_by_id(task_id: int):
+    target_index = get_item_index_by_id(tasks_data, task_id)
+    if target_index is None:
+        message = {"error": f"Task with id {task_id} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+    tasks_data.pop(target_index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 @app.get("/users")
 def get_users():
@@ -80,16 +89,6 @@ def get_user_by_id(user_id: int):
     JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
 
 
-@app.delete("/tasks/{task_id}")
-def delete_task_by_id(task_id: int):
-    target_index = get_item_index_by_id(tasks_data, task_id)
-    if target_index is None:
-        message = {"error": f"Task with id {task_id} does not exist"}
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    tasks_data.pop(target_index)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
 @app.post("/users", status_code=status.HTTP_201_CREATED)
 def create_user(body: UserBody):
     new_user = body.model_dump()
@@ -99,3 +98,12 @@ def create_user(body: UserBody):
 
     return {"message": "New user added", "details": new_user}
 
+
+@app.delete("/users/{user_id}")
+def delete_user_by_id(user_id: int):
+    target_index = get_item_index_by_id(tasks_data, user_id)
+    if target_index is None:
+        message = {"error": f"User with id {user_id} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+    users_data.pop(target_index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
