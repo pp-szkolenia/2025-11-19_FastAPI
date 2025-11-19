@@ -10,15 +10,15 @@ users_data = [
     {"id": 2, "username": "Andżela", "password": "hasło1!", "is_admin": False}
 ]
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 
-@router.get("/users")
+@router.get("", tags=["users"])
 def get_users():
     return JSONResponse(content={"result": users_data}, status_code=status.HTTP_200_OK)
 
 
-@router.get("/users/{user_id}")
+@router.get("/{user_id}", tags=["users"])
 def get_user_by_id(user_id: int):
     target_user = get_item_by_id(users_data, user_id)
     if not target_user:
@@ -28,7 +28,7 @@ def get_user_by_id(user_id: int):
     JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
 
 
-@router.post("/users", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, tags=["users"])
 def create_user(body: UserBody):
     new_user = body.model_dump()
     new_user_id = max(user["id"] for user in users_data) + 1
@@ -38,7 +38,7 @@ def create_user(body: UserBody):
     return {"message": "New user added", "details": new_user}
 
 
-@router.delete("/users/{user_id}")
+@router.delete("/{user_id}", tags=["users"])
 def delete_user_by_id(user_id: int):
     target_index = get_item_index_by_id(users_data, user_id)
     if target_index is None:
@@ -48,7 +48,7 @@ def delete_user_by_id(user_id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/users/{user_id}")
+@router.put("/{user_id}", tags=["users"])
 def update_user_by_id(user_id: int, body: UserBody):
     target_index = get_item_index_by_id(users_data, user_id)
 
