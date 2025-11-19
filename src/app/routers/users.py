@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 
-from app.models import UserBody
+from app.models import (UserBody, UserResponse, GetSingleUserResponse,
+                        GetAllUsersResponse, PostUserResponse, PutUserResponse)
 from app.utils import get_item_by_id, get_item_index_by_id
 
 
@@ -13,29 +14,43 @@ users_data = [
 router = APIRouter(prefix="/users")
 
 
-@router.get("", tags=["users"])
+@router.get("", tags=["users"], response_model=GetAllUsersResponse)
 def get_users():
-    return JSONResponse(content={"result": users_data}, status_code=status.HTTP_200_OK)
+    response_users_data = users_data.copy()
+    for user in response_users_data:
+        user["user_id"] = user["id"]
+    response_users_data = [
+        UserResponse(**user)
+        for user in response_users_data]
+
+    return {"result": response_users_data}
 
 
-@router.get("/{user_id}", tags=["users"])
+@router.get("/{user_id}", tags=["users"],
+            response_model=GetSingleUserResponse)
 def get_user_by_id(user_id: int):
     target_user = get_item_by_id(users_data, user_id)
     if not target_user:
         message = {"error": f"User with id {user_id} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
-    JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
+    target_user = target_user.copy()
+    target_user["user_id"] = target_user["id"]
+    return {"result": UserResponse(**target_user)}
+    # JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, tags=["users"])
+@router.post("", status_code=status.HTTP_201_CREATED,
+             tags=["users"], response_model=PostUserResponse)
 def create_user(body: UserBody):
     new_user = body.model_dump()
     new_user_id = max(user["id"] for user in users_data) + 1
     new_user["id"] = new_user_id
     users_data.append(new_user)
 
-    return {"message": "New user added", "details": new_user}
+    response_new_user = new_user.copy()
+    response_new_user["user_id"] = new_user["id"]
+    return {"message": "New user added", "details": response_new_user}
 
 
 @router.delete("/{user_id}", tags=["users"])
@@ -48,7 +63,8 @@ def delete_user_by_id(user_id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{user_id}", tags=["users"])
+@router.put("/{user_id}", tags=["users"],
+            response_model=PutUserResponse)
 def update_user_by_id(user_id: int, body: UserBody):
     target_index = get_item_index_by_id(users_data, user_id)
 
@@ -60,5 +76,8 @@ def update_user_by_id(user_id: int, body: UserBody):
     updated_user["id"] = user_id
     users_data[target_index] = updated_user
 
-    message = {"message": f"User with id {user_id} updated", "new_value": updated_user}
-    return JSONResponse(status_code=status.HTTP_200_OK, content=message)
+    updated_user = updated_user.copy()
+    updated_user["user_id"] = updated_user["id"]
+
+    return {"message": f"User with id {user_id} updated",
+            "new_value": UserResponse(**updated_user)}
