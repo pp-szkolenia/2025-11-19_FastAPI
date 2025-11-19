@@ -11,6 +11,12 @@ class TaskBody(BaseModel):
     is_completed: bool
 
 
+class UserBody(BaseModel):
+    username: str
+    password: str
+    is_admin: bool
+
+
 tasks_data = [
     {"id": 1, "description": "Learn FastAPI", "priority": 3, "is_completed": True},
     {"id": 2, "description": "Do exercises", "priority": 2, "is_completed": False}
@@ -46,3 +52,12 @@ def create_task(body: TaskBody):
 def get_users():
     return {"result": users_data}
 
+
+@app.post("/users")
+def create_user(body: UserBody):
+    new_user = body.model_dump()
+    new_user_id = max(user["id"] for user in users_data) + 1
+    new_user["id"] = new_user_id
+    users_data.append(new_user)
+
+    return {"message": "New user added", "details": new_user}
