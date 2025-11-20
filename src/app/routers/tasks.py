@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Response, Depends
+from fastapi import APIRouter, HTTPException, status, Response, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, between, asc, desc
+from typing import Literal
 
 from app.models import (TaskBody, TaskResponse, GetAllTasksResponse,
                         GetSingleTaskResponse, PostTaskResponse, PutTaskResponse)
@@ -12,10 +13,28 @@ router = APIRouter()
 
 
 @router.get("/tasks", response_model=GetAllTasksResponse)
-def get_tasks(session: Session = Depends(get_session)):
+def get_tasks(session: Session = Depends(get_session),
+              is_completed: bool | None = None,
+              min_priority: int = 1, max_priority: int = 5,
+              sort_by_description: Literal["asc", "desc", None] = Query(
+                  None, alias="sortByDescription"
+              )):
     with session:
-        stmt = select(Task)
-        tasks_data = session.scalars(stmt).all()
+        tasks_query = select(Task)
+
+        if is_completed is not None:
+            tasks_query = tasks_query.where(Task.is_completed == is_completed)
+        tasks_query = tasks_query.where(between(Task.priority, min_priority, max_priority))
+
+        if sort_by_description is not None:
+            if sort_by_description == "asc":
+                sort_func = asc
+            elif sort_by_description == "desc":
+                sort_func = desc
+
+            tasks_query = tasks_query.order_by(sort_func(Task.description))
+
+        tasks_data = session.scalars(tasks_query).all()
 
     response_tasks_data = [
         TaskResponse(task_id=task.id_number, description=task.description,
