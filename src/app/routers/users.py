@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Response, Depends
+from fastapi import APIRouter, HTTPException, status, Response, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func, asc, desc
+from typing import Literal
 
 from app.models import (UserBody, UserResponse, GetSingleUserResponse,
                         GetAllUsersResponse, PostUserResponse, PutUserResponse)
@@ -12,10 +13,27 @@ router = APIRouter(prefix="/users")
 
 
 @router.get("", tags=["users"], response_model=GetAllUsersResponse)
-def get_users(session: Session = Depends(get_session)):
+def get_users(session: Session = Depends(get_session),
+              is_admin: bool | None = None,
+              min_password_length: int | None = None,
+              sort_by_username: Literal["asc", "desc", None] = Query(
+                  None, alias="sortByUsername"
+              )):
     with session:
-        stmt = select(User)
-        users_data = session.scalars(stmt).all()
+        users_query = select(User)
+
+        if is_admin is not None:
+            users_query = users_query.where(User.is_admin.is_(is_admin))
+        if min_password_length is not None:
+            users_query = users_query.where(func.char_length(User.password) >= min_password_length)
+        if sort_by_username is not None:
+            if sort_by_username == "asc":
+                sort_func = asc
+            elif sort_by_username == "desc":
+                sort_func = desc
+            users_query = users_query.order_by(sort_func(User.username))
+
+        users_data = session.scalars(users_query).all()
 
     response_users_data = [
         UserResponse(user_id=user.id_number, username=user.username,
