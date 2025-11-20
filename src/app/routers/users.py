@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, Response
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, status, Response, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.models import (UserBody, UserResponse, GetSingleUserResponse,
                         GetAllUsersResponse, PostUserResponse, PutUserResponse)
-from app.utils import get_item_by_id, get_item_index_by_id
+from db.orm import get_session
+from db.models import User
 
 
 users_data = [
@@ -15,69 +17,89 @@ router = APIRouter(prefix="/users")
 
 
 @router.get("", tags=["users"], response_model=GetAllUsersResponse)
-def get_users():
-    response_users_data = users_data.copy()
-    for user in response_users_data:
-        user["user_id"] = user["id"]
-    response_users_data = [
-        UserResponse(**user)
-        for user in response_users_data]
+def get_users(session: Session = Depends(get_session)):
+    with session:
+        stmt = select(User)
+        users_data = session.scalars(stmt).all()
 
+    response_users_data = [
+        UserResponse(user_id=user.id_number, username=user.username,
+                     password=user.password, is_admin=user.is_admin)
+        for user in users_data
+    ]
     return {"result": response_users_data}
 
 
 @router.get("/{user_id}", tags=["users"],
             response_model=GetSingleUserResponse)
-def get_user_by_id(user_id: int):
-    target_user = get_item_by_id(users_data, user_id)
+def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
+    with session:
+        stmt = select(User).where(User.id_number == user_id)
+        target_user = session.scalars(stmt).first()
+
     if not target_user:
         message = {"error": f"User with id {user_id} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
-    target_user = target_user.copy()
-    target_user["user_id"] = target_user["id"]
-    return {"result": UserResponse(**target_user)}
-    # JSONResponse(content={"result": target_user}, status_code=status.HTTP_200_OK)
+    response_target_user = UserResponse(
+        user_id=target_user.id_number, username=target_user.username,
+        password=target_user.password, is_admin=target_user.is_admin
+    )
+    return {"result": response_target_user}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED,
              tags=["users"], response_model=PostUserResponse)
-def create_user(body: UserBody):
-    new_user = body.model_dump()
-    new_user_id = max(user["id"] for user in users_data) + 1
-    new_user["id"] = new_user_id
-    users_data.append(new_user)
+def create_user(body: UserBody, session: Session = Depends(get_session)):
+    new_user = User(**body.model_dump())
+    with session:
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
 
-    response_new_user = new_user.copy()
-    response_new_user["user_id"] = new_user["id"]
+    response_new_user = UserResponse(
+        user_id=new_user.id_number, username=new_user.username,
+        password=new_user.password, is_admin=new_user.is_admin
+    )
     return {"message": "New user added", "details": response_new_user}
 
 
 @router.delete("/{user_id}", tags=["users"])
-def delete_user_by_id(user_id: int):
-    target_index = get_item_index_by_id(users_data, user_id)
-    if target_index is None:
-        message = {"error": f"User with id {user_id} does not exist"}
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    users_data.pop(target_index)
+def delete_user_by_id(user_id: int, session: Session = Depends(get_session)):
+    with session:
+        stmt = select(User).where(User.id_number == user_id)
+        target_user = session.scalars(stmt).first()
+
+        if not target_user:
+            message = {"error": f"User with id {user_id} does not exist"}
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+        else:
+            session.delete(target_user)
+            session.commit()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/{user_id}", tags=["users"],
             response_model=PutUserResponse)
-def update_user_by_id(user_id: int, body: UserBody):
-    target_index = get_item_index_by_id(users_data, user_id)
+def update_user_by_id(user_id: int, body: UserBody, session: Session = Depends(get_session)):
+    with session:
+        stmt = select(User).where(User.id_number == user_id)
+        target_user = session.scalars(stmt).first()
 
-    if target_index is None:
-        message = {"error": f"User with id {user_id} does not exist"}
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-
-    updated_user = body.model_dump()
-    updated_user["id"] = user_id
-    users_data[target_index] = updated_user
-
-    updated_user = updated_user.copy()
-    updated_user["user_id"] = updated_user["id"]
+        if not target_user:
+            message = {"error": f"User with id {user_id} does not exist"}
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+        else:
+            updated_user = target_user
+            for field, value in body.model_dump().items():
+                setattr(updated_user, field, value)
+            session.commit()
+            session.refresh(updated_user)
+    response_updated_user = UserResponse(
+        user_id=updated_user.id_number, username=updated_user.username,
+        password=updated_user.password, is_admin=updated_user.is_admin
+    )
 
     return {"message": f"User with id {user_id} updated",
-            "new_value": UserResponse(**updated_user)}
+            "new_value": response_updated_user}
