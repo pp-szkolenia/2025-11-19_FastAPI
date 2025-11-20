@@ -8,11 +8,6 @@ from db.orm import get_session
 from db.models import User
 
 
-users_data = [
-    {"id": 1, "username": "Andrzej", "password": "qwerty123", "is_admin": True},
-    {"id": 2, "username": "Andżela", "password": "hasło1!", "is_admin": False}
-]
-
 router = APIRouter(prefix="/users")
 
 
