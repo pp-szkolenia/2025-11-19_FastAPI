@@ -34,5 +34,47 @@
     "method": "POST",
     "timestamp": "2025-11-21 15:34:43.163651",
     "response_code": 201
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:42:42.656865",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:43:56.786031",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:44:17.815306",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:44:18.729459",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:44:18.880087",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:47:12.452071",
+    "response_code": 403
+  },
+  {
+    "endpoint_URL": "/login",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:48:49.736957",
+    "response_code": 403
   }
 ]

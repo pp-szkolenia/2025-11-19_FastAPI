@@ -14,5 +14,6 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.44",
+    "streamlit>=1.51.0",
     "uvicorn>=0.38.0",
 ]
