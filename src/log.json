@@ -1,0 +1,38 @@
+[
+  {
+    "endpoint_URL": "http://127.0.0.1:8000/tasks",
+    "method": "GET",
+    "timestamp": "2025-11-21 15:32:48.324794",
+    "response_code": 200
+  },
+  {
+    "endpoint_URL": "http://127.0.0.1:8000/tasks/?max_priority=10&min_priority=1&sortByDescription=desc",
+    "method": "GET",
+    "timestamp": "2025-11-21 15:33:09.680045",
+    "response_code": 307
+  },
+  {
+    "endpoint_URL": "http://127.0.0.1:8000/tasks?max_priority=10&min_priority=1&sortByDescription=desc",
+    "method": "GET",
+    "timestamp": "2025-11-21 15:33:09.683981",
+    "response_code": 200
+  },
+  {
+    "endpoint_URL": "http://127.0.0.1:8000/tasks",
+    "method": "GET",
+    "timestamp": "2025-11-21 15:33:58.510854",
+    "response_code": 200
+  },
+  {
+    "endpoint_URL": "/tasks",
+    "method": "GET",
+    "timestamp": "2025-11-21 15:34:09.674697",
+    "response_code": 200
+  },
+  {
+    "endpoint_URL": "/users",
+    "method": "POST",
+    "timestamp": "2025-11-21 15:34:43.163651",
+    "response_code": 201
+  }
+]

@@ -2,7 +2,7 @@ import time
 from fastapi import FastAPI, Request
 
 from app.routers import tasks, users, auth
-from app.middleware import confirm_deletion
+from app.middleware import confirm_deletion, log_operations
 
 app = FastAPI(
     docs_url="/api/docs",
@@ -32,4 +32,4 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
-app.middleware("http")(confirm_deletion)
+app.middleware("http")(log_operations)
