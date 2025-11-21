@@ -12,6 +12,7 @@ dependencies = [
     "psycopg>=3.2.12",
     "pytest>=9.0.1",
     "python-dotenv>=1.2.1",
+    "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.44",
     "uvicorn>=0.38.0",
 ]

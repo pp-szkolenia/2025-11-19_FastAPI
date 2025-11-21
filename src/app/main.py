@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import tasks, users
+from app.routers import tasks, users, auth
 
 app = FastAPI(
     docs_url="/api/docs",
@@ -12,9 +12,9 @@ app = FastAPI(
 
 app.include_router(tasks.router)
 app.include_router(users.router)
+app.include_router(auth.router)
 
 
 @app.get("/", description="Test endpoint for demonstration purposes")
 def root():
     return {"message": "Hello World!"}
-

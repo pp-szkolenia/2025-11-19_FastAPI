@@ -66,7 +66,7 @@ def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
              tags=["users"], response_model=PostUserResponse)
 def create_user(body: UserBody, session: Session = Depends(get_session)):
     body = hash_password_in_body(body)
-    # print(body)
+
     assert isinstance(body.password, str)
 
     new_user = User(**body.model_dump())
