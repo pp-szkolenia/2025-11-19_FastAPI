@@ -4,10 +4,12 @@ from sqlalchemy import select, func, asc, desc
 from typing import Literal
 
 from app.models import (UserBody, UserResponse, GetSingleUserResponse,
-                        GetAllUsersResponse, PostUserResponse, PutUserResponse)
+                        GetAllUsersResponse, PostUserResponse, PutUserResponse,
+                        TokenData)
 from db.orm import get_session
 from db.models import User
 from app.utils import hash_password_in_body
+from app import oauth2
 
 
 router = APIRouter(prefix="/users")
@@ -19,7 +21,14 @@ def get_users(session: Session = Depends(get_session),
               min_password_length: int | None = None,
               sort_by_username: Literal["asc", "desc", None] = Query(
                   None, alias="sortByUsername"
-              )):
+              ),
+              user_data: TokenData = Depends(oauth2.get_current_user)):
+    if not user_data.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin can perform this operation"
+        )
+
     with session:
         users_query = select(User)
 
@@ -100,7 +109,11 @@ def delete_user_by_id(user_id: int, session: Session = Depends(get_session)):
 
 @router.put("/{user_id}", tags=["users"],
             response_model=PutUserResponse)
-def update_user_by_id(user_id: int, body: UserBody, session: Session = Depends(get_session)):
+def update_user_by_id(user_id: int, body: UserBody, session: Session = Depends(get_session),
+                      user_data: TokenData = Depends(oauth2.get_current_user)):
+    if not (user_data.is_admin or user_data.user_id == user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not authorized to perform this operation")
     with session:
         stmt = select(User).where(User.id_number == user_id)
         target_user = session.scalars(stmt).first()

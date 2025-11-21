@@ -48,6 +48,11 @@ class UserResponse(BaseModel):
 class GetSingleUserResponse(BaseModel):
     result: UserResponse
 
+class TokenData(BaseModel):
+    user_id: int
+    is_admin: bool
+
+
 
 class GetAllUsersResponse(BaseModel):
     result: list[UserResponse]
@@ -73,5 +78,3 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenData(BaseModel):
-    user_id: int

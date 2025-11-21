@@ -1,15 +1,19 @@
+import os
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError  # json web token
 from fastapi import HTTPException, status, Depends
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
 
 from app.models import TokenData
 
+
+load_dotenv()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-SECRET_KEY = "bc714fc37a3e6f18aa8e3dbce9cb5c9bebf1c7b48fd338472d119d52967a583e"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 5
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -28,11 +32,14 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 def verify_access_token(token: str, credentials_exception: HTTPException):
     try:
         payload = jwt.decode(token, SECRET_KEY, ALGORITHM)
+
         user_id = payload.get("user_id")
+        is_admin = payload.get("is_admin")
+
         if user_id is None:
             raise credentials_exception
 
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(user_id=user_id, is_admin=is_admin)
         return token_data
     except JWTError:
         raise credentials_exception
