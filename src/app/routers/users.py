@@ -7,6 +7,7 @@ from app.models import (UserBody, UserResponse, GetSingleUserResponse,
                         GetAllUsersResponse, PostUserResponse, PutUserResponse)
 from db.orm import get_session
 from db.models import User
+from app.utils import hash_password_in_body
 
 
 router = APIRouter(prefix="/users")
@@ -64,6 +65,10 @@ def get_user_by_id(user_id: int, session: Session = Depends(get_session)):
 @router.post("", status_code=status.HTTP_201_CREATED,
              tags=["users"], response_model=PostUserResponse)
 def create_user(body: UserBody, session: Session = Depends(get_session)):
+    body = hash_password_in_body(body)
+    # print(body)
+    assert isinstance(body.password, str)
+
     new_user = User(**body.model_dump())
     with session:
         session.add(new_user)
@@ -105,6 +110,7 @@ def update_user_by_id(user_id: int, body: UserBody, session: Session = Depends(g
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
         else:
             updated_user = target_user
+            body = hash_password_in_body(body)
             for field, value in body.model_dump().items():
                 setattr(updated_user, field, value)
             session.commit()

@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "bcrypt==4.3.0",
     "fastapi>=0.121.2",
     "jupyterlab>=4.5.0",
+    "passlib[bcrypt]>=1.7.4",
     "psycopg>=3.2.12",
     "pytest>=9.0.1",
     "python-dotenv>=1.2.1",
